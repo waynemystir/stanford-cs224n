@@ -30,21 +30,30 @@ def gradcheck_naive(f, x):
         # to test cost functions with built in randomness later.
 
         ### YOUR CODE HERE:
-        raise NotImplementedError
+        x[ix] += h
+        random.setstate(rndstate)
+        f1 = f(x)[0]
+
+        x[ix] -= 2*h
+        random.setstate(rndstate)
+        f2 = f(x)[0]
+
+        x[ix] += h
+        numgrad = (f1 - f2)/(2 * h)
         ### END YOUR CODE
 
         # Compare gradients
         reldiff = abs(numgrad - grad[ix]) / max(1, abs(numgrad), abs(grad[ix]))
         if reldiff > 1e-5:
-            print "Gradient check failed."
-            print "First gradient error found at index %s" % str(ix)
-            print "Your gradient: %f \t Numerical gradient: %f" % (
-                grad[ix], numgrad)
+            print("Gradient check failed.")
+            print("First gradient error found at index %s" % str(ix))
+            print("Your gradient: %f \t Numerical gradient: %f" % (
+                grad[ix], numgrad))
             return
 
         it.iternext() # Step to next dimension
 
-    print "Gradient check passed!"
+    print("Gradient check passed!")
 
 
 def sanity_check():
@@ -53,11 +62,11 @@ def sanity_check():
     """
     quad = lambda x: (np.sum(x ** 2), x * 2)
 
-    print "Running sanity checks..."
+    print("Running sanity checks...")
     gradcheck_naive(quad, np.array(123.456))      # scalar test
     gradcheck_naive(quad, np.random.randn(3,))    # 1-D test
     gradcheck_naive(quad, np.random.randn(4,5))   # 2-D test
-    print ""
+    print("")
 
 
 def your_sanity_checks():
@@ -67,7 +76,7 @@ def your_sanity_checks():
     This function will not be called by the autograder, nor will
     your additional tests be graded.
     """
-    print "Running your sanity checks..."
+    print("Running your sanity checks...")
     ### YOUR CODE HERE
     raise NotImplementedError
     ### END YOUR CODE
@@ -75,4 +84,4 @@ def your_sanity_checks():
 
 if __name__ == "__main__":
     sanity_check()
-    your_sanity_checks()
+#    your_sanity_checks()
