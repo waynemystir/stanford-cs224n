@@ -11,7 +11,7 @@ softmax(x+c)i = exp(xi+c)/∑j[exp(xj+c)] = exp(c)exp(xi)/∑j[exp(c)exp(xj)] = 
 
 (2b)
 
-ŷ = softmax(x)
+ŷ = softmax(x), assume x is a row vector, we just .T the final answer if it's a column vector
 J = CE(y,ŷ) = -∑i[yilog(ŷi)] = -log(ŷk), where k is the desired label
 
 ∂J/∂xi = -1/ŷk * -exp(xk)/[∑j[exp(xj)]]^2 * exp(xi)
@@ -77,19 +77,19 @@ ui and vj are column vectors of shape Dx1 (D=dimensions of embeddings)
 y is the one-hot column vector of shape |W|x1
 ŷ is the softmax prediction column vector of shape |W|x1
 U = [u1,u2,...,uk,...uW] is the matrix composed of uk column vectors
-ŷi = exp(ui.T.dot(vc)) / NS
-NS = NumeratorSum = ∑w [exp(uw.T.dot(vc))]
+ŷi = exp(ui.T.dot(vc)) / Φ
+Φ = Denominator Sum = ∑w [exp(uw.T.dot(vc))]
 Cross entropy loss: J = −∑w[ywlog(ŷw)]
 o is the index of the labeled word, so that yo = 1 and yw = 0 for w!=o
 
 
 J = -∑w [yw * log(ŷw)] # definition
  = -log(ŷo) # yw = 1 for w = o, otherwise yw = 0
- = -[uo.T.dot(vc) - log(NS)]
- = log(NS) - uo.T.dot(vc)
+ = -[uo.T.dot(vc) - log(Φ)]
+ = log(Φ) - uo.T.dot(vc)
 
-∂J/∂vc = 1/NS * ∑w [exp(uw.T.dot(vc)) * uw] - uo
- = ∑w [exp(uw.T.dot(vc))/NS * uw] - uo
+∂J/∂vc = 1/Φ * ∑w [exp(uw.T.dot(vc)) * uw] - uo
+ = ∑w [exp(uw.T.dot(vc))/Φ * uw] - uo
  = ∑w [ŷw*uw] - uo
 
 Or
@@ -153,14 +153,14 @@ So U.dot(ŷ-y) = U.dot(ŷ) - U.dot(y) = ∑ (ŷw uw) - uo
 
 J = -∑w [yw * log(ŷw)] # definition
  = -log(ŷo) # yw = 1 for w = o, otherwise yw = 0
- = -[uo.T.dot(vc) - log(NS)]
- = log(NS) - uo.T.dot(vc)
+ = -[uo.T.dot(vc) - log(Φ)]
+ = log(Φ) - uo.T.dot(vc)
 
-∂J/∂uo = 1/NS * exp(uo.T.dot(vc)) * vc - vc
+∂J/∂uo = 1/Φ * exp(uo.T.dot(vc)) * vc - vc
  = ŷo * vc - vc
  = (ŷo - 1) vc
 
-∂J/∂ui = 1/NS * exp(ui.T.dot(vc)) * vc
+∂J/∂ui = 1/Φ * exp(ui.T.dot(vc)) * vc
  = ŷi * vc
 
 ∂J/∂U = [ ∂J/∂u1  ∂J/∂u2  ∂J/∂u3  ∂J/∂u4 ]
