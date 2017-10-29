@@ -36,15 +36,71 @@ Hence ∂ŷk/∂θk = ∂ŷk/∂exp(θk) * ∂exp(θk)/∂θk = [∑ - exp(θk)]
 And finally ∂J/∂θ = [ ŷ1-0  ŷ2-0  ...  ŷk-1  ... ŷw-0 ] = ŷ - y
 
 
+Or this might be cleaner:
+
+Let's first get the Jacobian of the softmax.
+Let g(θi) = exp(θi) and ∑ = h(θi) = ∑j[exp(θj)] so that ŷi = g(θi)/h(θi)
+and the quotient rule of derivatives gives us
+
+∂ŷi/∂θi = [exp(θi)*∑ - exp(θi)^2] / ∑^2 = ŷi - ŷi^2 = ŷi(1 - ŷi)
+∂ŷj/∂θi = [0*∑ - exp(θj)^2] / ∑^2 = -ŷj^2
+
+And
+
+∂J/∂θk = ∂J/∂ŷk * ∂ŷk/∂θk = -1/ŷk * ŷ(1 - ŷk) = ŷk - 1
+∂J/∂θi = ∂J/∂ŷk * ∂ŷk/∂θi = -1/ŷk * -ŷk^2 = ŷk for i != k
+
+And finally ∂J/∂θ = [ ŷ1-0  ŷ2-0  ...  ŷk-1  ... ŷw-0 ] = ŷ - y
+
+And incidentally the Jacobian of the softmax is 
+
+  ŷ1(1-ŷ1)    -ŷ1^2      -ŷ1^2      -ŷ1^2      -ŷ1^2
+  -ŷ2^2       ŷ2(1-ŷ2)   -ŷ2^2      -ŷ2^2      -ŷ2^2
+[ -ŷ3^2       -ŷ3^2      ŷ3(1-ŷ3)   -ŷ3^2      -ŷ3^2   ]
+  -ŷ4^2       -ŷ4^2      -ŷ4^2      ŷ4(1-ŷ4)   -ŷ4^2
+  -ŷ5^2       -ŷ5^2      -ŷ5^2      -ŷ4^2      ŷ5(1-ŷ5)
+
+
+
 (2c)
 
-
-
+d3 = ∂J/∂θ = ŷ - y # 1x5
+d2 = ∂J/∂h = ∂J/∂θ * ∂θ/∂h = (ŷ - y).dot(W2.T) # 1x5 dot 5x3 = 1x3
+d1 = ∂J/∂z1 = d2 * ∂h/∂z1 = d2 * σ'(z1)
+∂J/∂x = d1 * ∂z1/∂x = d1.dot(W1.T) # 1x3 dot 3x5 = 1x5
+∂J/∂W1 = ∂z1/∂W1 * d1 = x.T.dot(d1) # 5x1 dot 1x3 = 5x3
+∂J/∂B1 = d1 # 1x3
 
 
 (2d) Neural Networks - number of parameters in a 2 layer network
 
 Concrete example:
+
+L1, X has D=5 dims, Hidden has H=3 neurons
+*******************************************************
+        1x5        *       5x3       +     1x3  
+
+                       W11 W12 W13
+                       W21 W22 W23
+  x1 x2 x3 x4 x5   *   W31 W32 W33   +   b1 b2 b3
+                       W41 W42 W43
+                       W51 W52 W53
+
+So DH + H = (D+1)H parameters
+
+L2, H=3 neurons, Output has Y=5 dims
+*******************************************************
+     1x3       *          3x5            +     1x5
+
+                   W11 W12 W13 W14 W15
+                   W21 W22 W23 W24 W25
+   h1 h2 h3    *   W31 W32 W33 W34 W35   +   b1 b2 b3
+                   W41 W42 W43 W44 W45
+                   W51 W52 W53 W54 W55
+
+So HY + Y = (H+1)Y parameters.
+
+Or we can flip the multiplication:
 
 L1, X has D=5 dims, Hidden has H=3 neurons
 *******************************************************
@@ -105,7 +161,7 @@ Or
 
 ∂J/∂vc = ∑w [∂J/∂xw * ∂xw/∂vc]
 where xw = uw.T.dot(vc)
-The sum is needed because all xi's depend on vc and ŷi's (which depend on the xi's) are summed together in J.
+The sum is needed because all xi's depend on vc and the ŷi's (which depend on the xi's) are summed together in J.
 
 We know that ∂J/∂xw = ŷw - yw (from problem 2b above)
 And that ∂xw/∂vc = uw
