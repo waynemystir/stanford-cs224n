@@ -1,0 +1,168 @@
+(1a)
+
+softmax(x+c)i = exp(xi+c)/∑j[exp(xj+c)] = exp(c)exp(xi)/∑j[exp(c)exp(xj)] = exp(xi)/∑j[exp(xj)] = softmax(x)i
+
+(2a)
+
+σ'(x) = [-1/(1+exp(-x))^2] * exp(-x) * -1 = exp(-x) / (1+exp(-x))^2
+ = [1+exp(-x)-1] / (1+exp(-x))^2 = (1+exp(-x)) / (1+exp(-x))^2 - 1/(1+exp(-x))^2
+ = 1/(1+exp(-x)) - σ(x)^2 = σ(x) - σ(x)^2
+ = σ(x)(1 - σ(x))
+
+(2b)
+
+ŷ = softmax(x)
+J = CE(y,ŷ) = -∑i[yilog(ŷi)] = -log(ŷk), where k is the desired label
+
+∂J/∂xi = -1/ŷk * -exp(xk)/[∑j[exp(xj)]]^2 * exp(xi)
+ = ŷk/ŷk * ŷi = ŷi for i != k
+
+Let ∑ = ∑j[exp(xj)]
+∂J/∂xk = -1/ŷk * [∑ - exp(xk)] / ∑^2 * exp(xk)   **Note below
+ = -∑/exp(xk) * (1 - ŷk) * 1/∑ * exp(xk)
+ = ŷk - 1
+
+** This follows from: if f(x) = x/(x+c), then f'(x) = c/(x+c)^2
+
+So ∂J/∂x = [ ŷ1-0  ŷ2-0  ...  ŷk-1  ... ŷw-0 ] = ŷ - y
+
+
+(2c)
+
+
+
+
+
+(2d) Neural Networks - number of parameters in a 2 layer network
+
+Concrete example:
+
+L1, X has D=5 dims, Hidden has H=3 neurons
+*******************************************************
+   3x5                *      5x1           +   3x1  
+
+W11 W12 W13 W14 W15
+W21 W22 W23 W24 W25   *   x1 x2 x3 x4 x5   +   b1 b2 b3
+W31 W32 W33 W34 W35
+
+So DH + H = (D+1)H parameters
+
+L2, H=3 neurons, Output has Y=5 dims
+*******************************************************
+   5x3                *     3x1      +   5x1
+
+W11 W12 W13
+W21 W22 W23
+W31 W32 W33           *   h1 h2 h3   +   b1 b2 b3 b4 b5
+W41 W42 W43
+W51 W52 W53
+
+So HY + Y = (H+1)Y parameters.
+
+Generally: Suppose X has D dims, Hidden has H neurons, and Output has Y dims.
+
+Then W1 has DxH parameters and B1 has H parameters. So that's D*H + H = (D+1)*H parameters.
+
+Similarly, W2 has HxY parameters and B2 has Y parameters. So that's (H+1)*Y parameters.
+
+Hence, (D+1)*H + (H+1)*Y parameters.
+
+
+(3a)
+
+https://stats.stackexchange.com/a/277590
+
+|W| is the number of words in the vocabulary
+ui and vj are column vectors of shape Dx1 (D=dimensions of embeddings)
+y is the one-hot column vector of shape |W|x1
+ŷ is the softmax prediction column vector of shape |W|x1
+U = [u1,u2,...,uk,...uW] is the matrix composed of uk column vectors
+ŷi = exp(ui.T.dot(vc)) / NS
+NS = NumeratorSum = ∑w [exp(uw.T.dot(vc))]
+Cross entropy loss: J = −∑w[ywlog(ŷw)]
+o is the index of the labeled word, so that yo = 1 and yw = 0 for w!=o
+
+
+J = -∑w [yw * log(ŷw)] # definition
+ = -log(ŷo) # yw = 1 for w = o, otherwise yw = 0
+ = -[uo.T.dot(vc) - log(NS)]
+ = log(NS) - uo.T.dot(vc)
+
+∂J/∂vc = 1/NS * ∑w [exp(uw.T.dot(vc)) * uw] - uo
+ = ∑w [exp(uw.T.dot(vc))/NS * uw] - uo
+ = ∑w [ŷw*uw] - uo
+
+Or
+
+∂J/∂vc = ∑w [∂J/∂xw * ∂xw/∂vc]
+where xw = uw.T.dot(vc)
+We know that ∂J/∂xw = ŷ - y
+And that ∂xw/∂vc = uw
+So that ∂J/∂vc = ∑w[(ŷw - yw)uw] = ∑w [ŷw*uw] - uo
+
+Now we show that uo = U.dot(y) # Dx1
+
+Suppose |W|=4, D=3, and o=3.
+
+      u11 u12 u13 u14
+U = [ u21 u22 u23 u24 ]
+      u31 u32 u33 u34
+
+      y1
+      y2
+y = [ y3 ], y3 = 1, y1,2,4 = 0
+      y4
+
+
+U.dot(y) = [u13 u23 u33].T
+
+      u13
+  = [ u23 ]
+      u33
+
+  = u3
+
+
+And lastly we show that U.dot(ŷ) = ∑ (ŷw uw)
+
+      ŷ1
+      ŷ2
+ŷ = [ ŷ3 ]
+      ŷ4 
+
+
+
+             u11*ŷ1 + u12*ŷ2 + u13*ŷ3 + u14*ŷ4
+U.dot(ŷ) = [ u21*ŷ1 + u22*ŷ2 + u23*ŷ3 + u24*ŷ4 ]
+             u31*ŷ1 + u32*ŷ2 + u33*ŷ3 + u34*ŷ4
+
+     ŷ1*u11       ŷ2*u12       ŷ3*u13       ŷ4*u14
+ = [ ŷ1*u21 ] + [ ŷ2*u22 ] + [ ŷ3*u23 ] + [ ŷ4*u24 ]
+     ŷ1*u31       ŷ2*u32       ŷ3*u33       ŷ4*u34
+
+
+ = ∑ (ŷw uw)
+
+So U.dot(ŷ-y) = U.dot(ŷ) - U.dot(y) = ∑ (ŷw uw) - uo
+
+
+(3b) 
+
+J = -∑w [yw * log(ŷw)] # definition
+ = -log(ŷo) # yw = 1 for w = o, otherwise yw = 0
+ = -[uo.T.dot(vc) - log(NS)]
+ = log(NS) - uo.T.dot(vc)
+
+∂J/∂uo = 1/NS * exp(uo.T.dot(vc)) * vc - vc
+ = ŷo * vc - vc
+ = (ŷo - 1) vc
+
+∂J/∂ui = 1/NS * exp(ui.T.dot(vc)) * vc
+ = ŷi * vc
+
+∂J/∂U = [ ∂J/∂u1  ∂J/∂u2  ∂J/∂u3  ∂J/∂u4 ]
+ = [ ŷ1*vc  ŷ2*vc  (ŷ3 - 1)*vc  ŷ4*vc]
+ = vc.dot((ŷ - y).T)
+
+
+

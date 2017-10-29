@@ -31,3 +31,21 @@ Then W1 has DxH parameters and B1 has H parameters. So that's D*H + H = (D+1)*H 
 Similarly, W2 has HxY parameters and B2 has Y parameters. So that's (H+1)*Y parameters.
 
 Hence, (D+1)*H + (H+1)*Y parameters.
+
+
+
+(3b) 
+
+NS = NumeratorSum = Sw [exp(uw.T.dot(vc))]
+yhati = exp(ui.T.dot(vc)) / NS
+
+J = -Sw [yw * log(yhatw)] # definition
+ = -log(yhato) # yw = 1 for w = o, otherwise yw = 0
+ = -[uo.T.dot(vc) - log(NS)]
+
+DJ/Duo = 1/NS * exp(uo.T.dot(vc)) * vc - vc
+ = yhato * vc - vc
+ = (yhato - 1) vc
+
+DJ/Dui = 1/NS * exp(ui.T.dot(vc)) * vc
+ = yhati * vc
