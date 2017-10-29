@@ -96,9 +96,12 @@ Or
 
 ∂J/∂vc = ∑w [∂J/∂xw * ∂xw/∂vc]
 where xw = uw.T.dot(vc)
-We know that ∂J/∂xw = ŷ - y
+The sum is needed because all xi's depend on vc and ŷi's (which depend on the xi's) are summed together in J.
+
+We know that ∂J/∂xw = ŷw - yw (from problem 2b above)
 And that ∂xw/∂vc = uw
 So that ∂J/∂vc = ∑w[(ŷw - yw)uw] = ∑w [ŷw*uw] - uo
+
 
 Now we show that uo = U.dot(y) # Dx1
 
@@ -141,7 +144,7 @@ U.dot(ŷ) = [ u21*ŷ1 + u22*ŷ2 + u23*ŷ3 + u24*ŷ4 ]
      ŷ1*u31       ŷ2*u32       ŷ3*u33       ŷ4*u34
 
 
- = ∑ (ŷw uw)
+ = ∑w (ŷw uw)
 
 So U.dot(ŷ-y) = U.dot(ŷ) - U.dot(y) = ∑ (ŷw uw) - uo
 
