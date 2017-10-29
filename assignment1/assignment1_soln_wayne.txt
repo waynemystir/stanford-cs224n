@@ -11,20 +11,29 @@ softmax(x+c)i = exp(xi+c)/∑j[exp(xj+c)] = exp(c)exp(xi)/∑j[exp(c)exp(xj)] = 
 
 (2b)
 
-ŷ = softmax(x), assume x is a row vector, we just .T the final answer if it's a column vector
+ŷ = softmax(θ), assume θ is a row vector, we just .T the final answer if it's a column vector
+∑ = ∑j[exp(θj)]
+ŷi = exp(θi)/∑
 J = CE(y,ŷ) = -∑i[yilog(ŷi)] = -log(ŷk), where k is the desired label
 
-∂J/∂xi = -1/ŷk * -exp(xk)/[∑j[exp(xj)]]^2 * exp(xi)
+∂J/∂θi = -1/ŷk * -exp(θk)/∑^2 * exp(θi)
  = ŷk/ŷk * ŷi = ŷi for i != k
 
-Let ∑ = ∑j[exp(xj)]
-∂J/∂xk = -1/ŷk * [∑ - exp(xk)] / ∑^2 * exp(xk)   **Note below
- = -∑/exp(xk) * (1 - ŷk) * 1/∑ * exp(xk)
+∂J/∂θk = -1/ŷk * [∑ - exp(θk)] / ∑^2 * exp(θk)   ** Note below
+ = -∑/exp(θk) * (1 - ŷk) * 1/∑ * exp(θk)
  = ŷk - 1
 
-** This follows from: if f(x) = x/(x+c), then f'(x) = c/(x+c)^2
+** This follows from: if f(x) = x/(x+c), then f'(x) = c/(x+c)^2:
+Let g(x) = x and h(x) = x+c. Then the quotient rule of derivatives tells us
+f'(x) = [g'(x)h(x) - h'(x)g(x)]/[h(x)]^2
+ = (x+c - x)/(x+c)^2
+ = c/(x+c)^2
 
-So ∂J/∂x = [ ŷ1-0  ŷ2-0  ...  ŷk-1  ... ŷw-0 ] = ŷ - y
+Then set c = ∑,j!=k = ∑ - exp(θk) and x = exp(θk) to get
+∂ŷk/∂exp(θk) = [∑ - exp(θk)] / ∑^2
+Hence ∂ŷk/∂θk = ∂ŷk/∂exp(θk) * ∂exp(θk)/∂θk = [∑ - exp(θk)] / ∑^2 * exp(θk)
+
+And finally ∂J/∂θ = [ ŷ1-0  ŷ2-0  ...  ŷk-1  ... ŷw-0 ] = ŷ - y
 
 
 (2c)
