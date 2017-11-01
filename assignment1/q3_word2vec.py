@@ -58,11 +58,11 @@ def softmaxCostAndGradient(predicted, target, outputVectors, dataset):
     """
 
     ### YOUR CODE HERE
-    yhat = softmax(outputVectors.dot(predicted))
-    yonehot = np.eye(outputVectors.shape[0], dtype=int)[target]
-    cost = -np.log(yhat[target])
-    gradPred = outputVectors.T.dot(yhat - yonehot)
-    grad = np.outer((yhat - yonehot), predicted)
+    yy = softmax(outputVectors.dot(predicted)) # ŷ
+    cost = -np.log(yy[target])
+    yy[target] -= 1.0 # ŷ - y
+    gradPred = outputVectors.T.dot(yy)
+    grad = np.outer(yy, predicted)
     # np.outer handles the reshapes and .T from below for us
 #    grad = predicted.reshape(predicted.shape[0],1).dot((yhat - yonehot).reshape(yhat.shape[0],1).T)
     # Also notice that we switched the arguments in np.outer from 
@@ -103,9 +103,21 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
     # wish to match the autograder and receive points!
     indices = [target]
     indices.extend(getNegativeSamples(target, dataset, K))
-
+    gradPred = np.zeros_like(predicted)
+    grad = np.zeros_like(outputVectors)
     ### YOUR CODE HERE
-    raise NotImplementedError
+#    ns = np.random.choice(outputVectors.shape[0], K, replace=False)
+#    NS = outputVectors[ns,:]
+    NS = outputVectors[indices,:]
+    uo = outputVectors[target]
+    cost = -np.log(sigmoid(uo.dot(predicted))) - np.sum(np.log(sigmoid(-NS.dot(predicted))))
+    gradPred = (sigmoid(uo.dot(predicted)) - 1.0) * uo - (sigmoid(-NS.dot(predicted)) - 1.0).dot(NS))
+    gTmp = -(sigmoid(-NS.dot(predicted)) - 1.0) * np.tile(predicted, (K,1)).T # 200x20
+    gTmp = gTmp.T # 20x200
+    for k in range(K):
+        idx = indices[k + 1]
+        grad[idx] = gTmp[k]
+    grad[target] = (sigmoid(uo.dot(predicted)) - 1) * predicted
     ### END YOUR CODE
 
     return cost, gradPred, grad
