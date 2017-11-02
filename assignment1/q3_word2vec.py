@@ -102,8 +102,7 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
     # Sampling of indices is done for you. Do not modify this if you
     # wish to match the autograder and receive points!
     indices = getNegativeSamples(target, dataset, K)
-    gradPred = np.zeros_like(predicted)
-    grad = np.zeros_like(outputVectors)
+
     ### YOUR CODE HERE
 #    ns = np.random.choice(outputVectors.shape[0], K, replace=False)
 #    NS = outputVectors[ns,:]
@@ -112,10 +111,47 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
     cost = -np.log(sigmoid(uo.dot(predicted))) - np.sum(np.log(sigmoid(-NS.dot(predicted))))
     gradPred = (sigmoid(uo.dot(predicted)) - 1.0) * uo - (sigmoid(-NS.dot(predicted)) - 1.0).dot(NS)
     gTmp = -(sigmoid(-NS.dot(predicted)) - 1.0) * np.tile(predicted, (K,1)).T # DxK
-    gTmp = gTmp.T # KxD
+    grad = np.zeros_like(outputVectors)
     for k in range(K):
-        grad[indices[k]] += gTmp[k]
+        grad[indices[k]] += gTmp[:,k]
     grad[target] = (sigmoid(uo.dot(predicted)) - 1) * predicted
+    ### END YOUR CODE
+
+    return cost, gradPred, grad
+
+
+def negSamplingCostAndGradientNonVectorized(predicted, target, outputVectors, dataset,
+                               K=10):
+    """ Negative sampling cost function for word2vec models
+    Implement the cost and gradients for one predicted word vector
+    and one target word vector as a building block for word2vec
+    models, using the negative sampling technique. K is the sample
+    size.
+    Note: See test_word2vec below for dataset's initialization.
+    Arguments/Return Specifications: same as softmaxCostAndGradient
+    """
+
+    # Sampling of indices is done for you. Do not modify this if you
+    # wish to match the autograder and receive points!
+    indices = [target]
+    indices.extend(getNegativeSamples(target, dataset, K))
+
+    ### YOUR CODE HERE
+    grad = np.zeros(outputVectors.shape)
+    gradPred = np.zeros(predicted.shape)
+    cost = 0
+    z = sigmoid(np.dot(outputVectors[target], predicted))
+
+    cost -= np.log(z)
+    grad[target] += predicted * (z - 1.0)
+    gradPred += outputVectors[target] * (z - 1.0)
+
+    for k in range(K):
+        samp = indices[k + 1]
+        z = sigmoid(np.dot(outputVectors[samp], predicted))
+        cost -= np.log(1.0 - z)
+        grad[samp] += predicted * z
+        gradPred += outputVectors[samp] * z
     ### END YOUR CODE
 
     return cost, gradPred, grad
