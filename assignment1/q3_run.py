@@ -14,7 +14,14 @@ from q3_sgd import *
 # Reset the random seed to make sure that everyone gets the same results
 random.seed(314)
 dataset = StanfordSentiment()
-tokens = dataset.tokens()
+tokens_encoded = dataset.tokens()
+for k,v in tokens_encoded.items():
+    if type(k) == str:
+        tokens_encoded.pop(k)
+        tokens_encoded[k.encode('latin1')] = v
+tokens = dict((k.decode('latin1'),v) for k,v in tokens_encoded.items())
+print("SCREEN ({})".format(tokens['screenwriter']))
+#print("SCRBBB ({})".format(tokens[b'screenwriter']))
 nWords = len(tokens)
 
 # We are going to train 10-dimensional vectors for this assignment
@@ -33,14 +40,14 @@ wordVectors = np.concatenate(
        dimVectors, np.zeros((nWords, dimVectors))),
     axis=0)
 wordVectors = sgd(
-    lambda vec: word2vec_sgd_wrapper(skipgram, tokens, vec, dataset, C,
-        negSamplingCostAndGradient),
-    wordVectors, 0.3, 40000, None, True, PRINT_EVERY=10)
+    lambda vec: word2vec_sgd_wrapper(skipgram, tokens_encoded, vec, dataset, C,
+        negSamplingCostAndGradientNonVectorized),
+    wordVectors, 0.3, 40000, None, True, PRINT_EVERY=1000)
 # Note that normalization is not called here. This is not a bug,
 # normalizing during training loses the notion of length.
 
-print "sanity check: cost at convergence should be around or below 10"
-print "training took %d seconds" % (time.time() - startTime)
+print("sanity check: cost at convergence should be around or below 10")
+print("training took %d seconds" % (time.time() - startTime))
 
 # concatenate the input and output word vectors
 wordVectors = np.concatenate(
@@ -48,11 +55,18 @@ wordVectors = np.concatenate(
     axis=0)
 # wordVectors = wordVectors[:nWords,:] + wordVectors[nWords:,:]
 
+#visualizeWords = [
+#    "the", "a", "an", ",", ".", "?", "!", "``", "''", "--",
+#    "good", "great", "cool", "brilliant", "wonderful", "well", "amazing",
+#    "worth", "sweet", "enjoyable", "boring", "bad", "waste", "dumb",
+#    "annoying"]
+
+#visualizeWords = [
+#    "good", "bad", "dumb", "brilliant", "wonderful", "awful", "amazing",
+#    "smart", "sweet", "mean", "sour", "dumb", "up", "down", "safe", "dangerous"]
+
 visualizeWords = [
-    "the", "a", "an", ",", ".", "?", "!", "``", "''", "--",
-    "good", "great", "cool", "brilliant", "wonderful", "well", "amazing",
-    "worth", "sweet", "enjoyable", "boring", "bad", "waste", "dumb",
-    "annoying"]
+    "dumb", "smart", "big", "small"]
 
 visualizeIdx = [tokens[word] for word in visualizeWords]
 visualizeVecs = wordVectors[visualizeIdx, :]
@@ -61,7 +75,7 @@ covariance = 1.0 / len(visualizeIdx) * temp.T.dot(temp)
 U,S,V = np.linalg.svd(covariance)
 coord = temp.dot(U[:,0:2])
 
-for i in xrange(len(visualizeWords)):
+for i in range(len(visualizeWords)):
     plt.text(coord[i,0], coord[i,1], visualizeWords[i],
         bbox=dict(facecolor='green', alpha=0.1))
 

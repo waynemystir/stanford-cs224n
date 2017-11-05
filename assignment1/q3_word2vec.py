@@ -101,20 +101,20 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
 
     # Sampling of indices is done for you. Do not modify this if you
     # wish to match the autograder and receive points!
-    indices = getNegativeSamples(target, dataset, K)
+    indices = [target]
+    indices.extend(getNegativeSamples(target, dataset, K))
+#    indices = getNegativeSamples(target, dataset, K)
 
     ### YOUR CODE HERE
 #    ns = np.random.choice(outputVectors.shape[0], K, replace=False)
 #    NS = outputVectors[ns,:]
-    NS = outputVectors[indices,:]
-    uo = outputVectors[target]
-    cost = -np.log(sigmoid(uo.dot(predicted))) - np.sum(np.log(sigmoid(-NS.dot(predicted))))
-    gradPred = (sigmoid(uo.dot(predicted)) - 1.0) * uo - (sigmoid(-NS.dot(predicted)) - 1.0).dot(NS)
-    gTmp = -(sigmoid(-NS.dot(predicted)) - 1.0) * np.tile(predicted, (K,1)).T # DxK
-    grad = np.zeros_like(outputVectors)
-    for k in range(K):
+    NS, uo, grad = outputVectors[indices[1:],:], outputVectors[target], np.zeros_like(outputVectors)
+    uop,nsp = sigmoid(uo.dot(predicted)),sigmoid(NS.dot(predicted))
+    cost = -np.log(uop)-np.sum(np.log(1.-nsp))
+    gradPred = (uop-1.) * uo + nsp.dot(NS)
+    gTmp = np.insert(nsp,0,uop-1.) * np.tile(predicted, (K+1,1)).T # DxK+1
+    for k in range(K+1):
         grad[indices[k]] += gTmp[:,k]
-    grad[target] = (sigmoid(uo.dot(predicted)) - 1) * predicted
     ### END YOUR CODE
 
     return cost, gradPred, grad
