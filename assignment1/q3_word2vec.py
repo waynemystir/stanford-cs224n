@@ -2,6 +2,7 @@
 
 import numpy as np
 import random
+import time
 
 from q1_softmax import softmax
 from q2_gradcheck import gradcheck_naive
@@ -85,7 +86,7 @@ def getNegativeSamples(target, dataset, K):
     return indices
 
 
-def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
+def negSamplingCostAndGradient01(predicted, target, outputVectors, dataset,
                                K=10):
     """ Negative sampling cost function for word2vec models
 
@@ -108,13 +109,260 @@ def negSamplingCostAndGradient(predicted, target, outputVectors, dataset,
     ### YOUR CODE HERE
 #    ns = np.random.choice(outputVectors.shape[0], K, replace=False)
 #    NS = outputVectors[ns,:]
-    NS, uo, grad = outputVectors[indices[1:],:], outputVectors[target], np.zeros_like(outputVectors)
+    D,NS,uo,grad = outputVectors.shape[1], outputVectors[indices[1:],:], outputVectors[target], np.zeros_like(outputVectors)
+    uop,nsp = sigmoid(uo.dot(predicted)),sigmoid(NS.dot(predicted))
+    cost = -np.log(uop)-np.sum(np.log(1.-nsp))
+    gradPred = (uop-1.) * uo + nsp.dot(NS)
+    gTmp = np.insert(nsp,0,uop-1.).reshape(K+1,1).dot(predicted.reshape(1,D)) # K+1xD
+    for k in range(K+1):
+        grad[indices[k]] += gTmp[k,:]
+    ### END YOUR CODE
+
+    return cost, gradPred, grad
+
+
+def negSamplingCostAndGradient02(predicted, target, outputVectors, dataset,
+                               K=10):
+    """ Negative sampling cost function for word2vec models
+
+    Implement the cost and gradients for one predicted word vector
+    and one target word vector as a building block for word2vec
+    models, using the negative sampling technique. K is the sample
+    size.
+
+    Note: See test_word2vec below for dataset's initialization.
+
+    Arguments/Return Specifications: same as softmaxCostAndGradient
+    """
+
+    # Sampling of indices is done for you. Do not modify this if you
+    # wish to match the autograder and receive points!
+    indices = [target]
+    indices.extend(getNegativeSamples(target, dataset, K))
+#    indices = getNegativeSamples(target, dataset, K)
+
+    ### YOUR CODE HERE
+#    ns = np.random.choice(outputVectors.shape[0], K, replace=False)
+#    NS = outputVectors[ns,:]
+    D,NS,uo,grad = outputVectors.shape[1], outputVectors[indices[1:],:], outputVectors[target], np.zeros_like(outputVectors)
     uop,nsp = sigmoid(uo.dot(predicted)),sigmoid(NS.dot(predicted))
     cost = -np.log(uop)-np.sum(np.log(1.-nsp))
     gradPred = (uop-1.) * uo + nsp.dot(NS)
     gTmp = np.insert(nsp,0,uop-1.) * np.tile(predicted, (K+1,1)).T # DxK+1
     for k in range(K+1):
         grad[indices[k]] += gTmp[:,k]
+    ### END YOUR CODE
+
+    return cost, gradPred, grad
+
+
+def negSamplingCostAndGradient03(predicted, target, outputVectors, dataset,
+                               K=10):
+    """ Negative sampling cost function for word2vec models
+
+    Implement the cost and gradients for one predicted word vector
+    and one target word vector as a building block for word2vec
+    models, using the negative sampling technique. K is the sample
+    size.
+
+    Note: See test_word2vec below for dataset's initialization.
+
+    Arguments/Return Specifications: same as softmaxCostAndGradient
+    """
+
+    # Sampling of indices is done for you. Do not modify this if you
+    # wish to match the autograder and receive points!
+    indices = [target]
+    indices.extend(getNegativeSamples(target, dataset, K))
+#    indices = getNegativeSamples(target, dataset, K)
+
+    ### YOUR CODE HERE
+#    ns = np.random.choice(outputVectors.shape[0], K, replace=False)
+#    NS = outputVectors[ns,:]
+    D,NS,uo,grad = outputVectors.shape[1], outputVectors[indices[1:],:], outputVectors[target], np.zeros_like(outputVectors)
+    uop,nsp = sigmoid(uo.dot(predicted)),sigmoid(NS.dot(predicted))
+    cost = -np.log(uop)-np.sum(np.log(1.-nsp))
+    gradPred = np.insert(nsp,0,uop-1.).reshape(1,K+1).dot(np.concatenate((uo.reshape(1,D),NS))).flatten()
+    gTmp = np.insert(nsp,0,uop-1.).reshape(K+1,1).dot(predicted.reshape(1,D)) # K+1xD
+    for k in range(K+1):
+        grad[indices[k]] += gTmp[k,:]
+    ### END YOUR CODE
+
+    return cost, gradPred, grad
+
+
+def negSamplingCostAndGradient04(predicted, target, outputVectors, dataset,
+                               K=10):
+    """ Negative sampling cost function for word2vec models
+
+    Implement the cost and gradients for one predicted word vector
+    and one target word vector as a building block for word2vec
+    models, using the negative sampling technique. K is the sample
+    size.
+
+    Note: See test_word2vec below for dataset's initialization.
+
+    Arguments/Return Specifications: same as softmaxCostAndGradient
+    """
+
+    # Sampling of indices is done for you. Do not modify this if you
+    # wish to match the autograder and receive points!
+    indices = [target]
+    indices.extend(getNegativeSamples(target, dataset, K))
+#    indices = getNegativeSamples(target, dataset, K)
+
+    ### YOUR CODE HERE
+#    ns = np.random.choice(outputVectors.shape[0], K, replace=False)
+#    NS = outputVectors[ns,:]
+    D,NS,uo,grad = outputVectors.shape[1], outputVectors[indices[1:],:], outputVectors[target], np.zeros_like(outputVectors)
+    uop,nsp = sigmoid(uo.dot(predicted)),sigmoid(NS.dot(predicted))
+    cost = -np.sum(np.log(np.insert(1.-nsp,0,uop)))
+    gradPred = np.insert(nsp,0,uop-1.).reshape(1,K+1).dot(np.concatenate((uo.reshape(1,D),NS))).flatten()
+    gTmp = np.insert(nsp,0,uop-1.).reshape(K+1,1).dot(predicted.reshape(1,D)) # K+1xD
+    for k in range(K+1):
+        grad[indices[k]] += gTmp[k,:]
+    ### END YOUR CODE
+
+    return cost, gradPred, grad
+
+
+def negSamplingCostAndGradient05(predicted, target, outputVectors, dataset,
+                               K=10):
+    """ Negative sampling cost function for word2vec models
+
+    Implement the cost and gradients for one predicted word vector
+    and one target word vector as a building block for word2vec
+    models, using the negative sampling technique. K is the sample
+    size.
+
+    Note: See test_word2vec below for dataset's initialization.
+
+    Arguments/Return Specifications: same as softmaxCostAndGradient
+    """
+
+    # Sampling of indices is done for you. Do not modify this if you
+    # wish to match the autograder and receive points!
+    indices = [target]
+    indices.extend(getNegativeSamples(target, dataset, K))
+#    indices = getNegativeSamples(target, dataset, K)
+
+    ### YOUR CODE HERE
+#    ns = np.random.choice(outputVectors.shape[0], K, replace=False)
+#    NS = outputVectors[ns,:]
+    D,outWords,grad = outputVectors.shape[1], outputVectors[indices,:], np.zeros_like(outputVectors)
+    uop,nsp = sigmoid(outWords[0].dot(predicted)),sigmoid(outWords[1:,:].dot(predicted))
+    cost = -np.log(uop)-np.sum(np.log(1.-nsp))
+    gradPred = np.insert(nsp,0,uop-1.).reshape(1,K+1).dot(outWords).flatten()
+    gTmp = np.insert(nsp,0,uop-1.).reshape(K+1,1).dot(predicted.reshape(1,D)) # K+1xD
+    for k in range(K+1):
+        grad[indices[k]] += gTmp[k,:]
+    ### END YOUR CODE
+
+    return cost, gradPred, grad
+
+
+def negSamplingCostAndGradient06(predicted, target, outputVectors, dataset,
+                               K=10):
+    """ Negative sampling cost function for word2vec models
+
+    Implement the cost and gradients for one predicted word vector
+    and one target word vector as a building block for word2vec
+    models, using the negative sampling technique. K is the sample
+    size.
+
+    Note: See test_word2vec below for dataset's initialization.
+
+    Arguments/Return Specifications: same as softmaxCostAndGradient
+    """
+
+    # Sampling of indices is done for you. Do not modify this if you
+    # wish to match the autograder and receive points!
+    indices = [target]
+    indices.extend(getNegativeSamples(target, dataset, K))
+#    indices = getNegativeSamples(target, dataset, K)
+
+    ### YOUR CODE HERE
+#    ns = np.random.choice(outputVectors.shape[0], K, replace=False)
+#    NS = outputVectors[ns,:]
+    D,outWords,grad = outputVectors.shape[1], outputVectors[indices,:], np.zeros_like(outputVectors)
+    uop,nsp = sigmoid(outWords[0].dot(predicted)),sigmoid(outWords[1:,:].dot(predicted))
+    cost = -np.log(uop)-np.sum(np.log(1.-nsp))
+    tw = np.insert(nsp,0,uop-1.)
+    gradPred = tw.reshape(1,K+1).dot(outWords).flatten()
+    gTmp = tw.reshape(K+1,1).dot(predicted.reshape(1,D)) # K+1xD
+    for k in range(K+1):
+        grad[indices[k]] += gTmp[k,:]
+    ### END YOUR CODE
+
+    return cost, gradPred, grad
+
+
+def negSamplingCostAndGradient07(predicted, target, outputVectors, dataset,
+                               K=10):
+    """ Negative sampling cost function for word2vec models
+
+    Implement the cost and gradients for one predicted word vector
+    and one target word vector as a building block for word2vec
+    models, using the negative sampling technique. K is the sample
+    size.
+
+    Note: See test_word2vec below for dataset's initialization.
+
+    Arguments/Return Specifications: same as softmaxCostAndGradient
+    """
+
+    # Sampling of indices is done for you. Do not modify this if you
+    # wish to match the autograder and receive points!
+    indices = [target]
+    indices.extend(getNegativeSamples(target, dataset, K))
+#    indices = getNegativeSamples(target, dataset, K)
+
+    ### YOUR CODE HERE
+#    ns = np.random.choice(outputVectors.shape[0], K, replace=False)
+#    NS = outputVectors[ns,:]
+    D,outWords,grad = outputVectors.shape[1], outputVectors[indices,:], np.zeros_like(outputVectors)
+    wp = sigmoid(outWords.dot(predicted))
+    cost = -np.log(wp[0])-np.sum(np.log(1.-wp[1:]))
+    wp[0] -= 1
+    gradPred = wp.reshape(1,K+1).dot(outWords).flatten()
+    gTmp = wp.reshape(K+1,1).dot(predicted.reshape(1,D)) # K+1xD
+    for k in range(K+1):
+        grad[indices[k]] += gTmp[k,:]
+    ### END YOUR CODE
+
+    return cost, gradPred, grad
+
+
+def negSamplingCostAndGradient08(predicted, target, outputVectors, dataset,
+                               K=10):
+    """ Negative sampling cost function for word2vec models
+
+    Implement the cost and gradients for one predicted word vector
+    and one target word vector as a building block for word2vec
+    models, using the negative sampling technique. K is the sample
+    size.
+
+    Note: See test_word2vec below for dataset's initialization.
+
+    Arguments/Return Specifications: same as softmaxCostAndGradient
+    """
+
+    # Sampling of indices is done for you. Do not modify this if you
+    # wish to match the autograder and receive points!
+    indices = [target]
+    indices.extend(getNegativeSamples(target, dataset, K))
+
+    ### YOUR CODE HERE
+    directions,grad,D = np.array([1] + [-1 for k in range(K)]), np.zeros_like(outputVectors), outputVectors.shape[1]
+    outputWords = outputVectors[indices,:]
+    delta = sigmoid(np.dot(outputWords,predicted) * directions)
+    deltaMinus = (delta - 1) * directions;
+    cost = -np.sum(np.log(delta));
+    gradPred = np.dot(deltaMinus.reshape(1,K+1),outputWords).flatten()
+    gradMin = np.dot(deltaMinus.reshape(K+1,1),predicted.reshape(1,D))
+
+    for k in range(K+1):
+        grad[indices[k]] += gradMin[k,:]
     ### END YOUR CODE
 
     return cost, gradPred, grad
@@ -218,7 +466,13 @@ def cbow(currentWord, C, contextWords, tokens, inputVectors, outputVectors,
     gradOut = np.zeros(outputVectors.shape)
 
     ### YOUR CODE HERE
-    #raise NotImplementedError
+    predicted_indicies = [tokens[cw] for cw in contextWords]
+    predicted_vectors = inputVectors[predicted_indicies]
+    predicted = np.sum(predicted_vectors, axis=0)
+    target = tokens[currentWord]
+    cost, gradIn_predicted, gradOut = word2vecCostAndGradient(predicted, target, outputVectors, dataset)
+    for i in predicted_indicies:
+        gradIn[i] += gradIn_predicted
     ### END YOUR CODE
 
     return cost, gradIn, gradOut
@@ -276,28 +530,70 @@ def test_word2vec():
     gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
         skipgram, dummy_tokens, vec, dataset, 5, softmaxCostAndGradient),
         dummy_vectors)
+    startTime = time.time()
     gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
-        skipgram, dummy_tokens, vec, dataset, 5, negSamplingCostAndGradient),
+        skipgram, dummy_tokens, vec, dataset, 5, negSamplingCostAndGradient01),
         dummy_vectors)
-#    print("\n==== Gradient check for CBOW      ====")
-#    gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
-#        cbow, dummy_tokens, vec, dataset, 5, softmaxCostAndGradient),
-#        dummy_vectors)
-#    gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
-#        cbow, dummy_tokens, vec, dataset, 5, negSamplingCostAndGradient),
-#        dummy_vectors)
+    print("nSCAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG1111111111111111 took %f seconds" % (time.time() - startTime))
+    startTime = time.time()
+    gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
+        skipgram, dummy_tokens, vec, dataset, 5, negSamplingCostAndGradient02),
+        dummy_vectors)
+    print("nSCAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG2222222222222222 took %f seconds" % (time.time() - startTime))
+    startTime = time.time()
+    gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
+        skipgram, dummy_tokens, vec, dataset, 5, negSamplingCostAndGradient03),
+        dummy_vectors)
+    print("nSCAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG3333333333333333 took %f seconds" % (time.time() - startTime))
+    startTime = time.time()
+    gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
+        skipgram, dummy_tokens, vec, dataset, 5, negSamplingCostAndGradient04),
+        dummy_vectors)
+    print("nSCAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG4444444444444444 took %f seconds" % (time.time() - startTime))
+    startTime = time.time()
+    gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
+        skipgram, dummy_tokens, vec, dataset, 5, negSamplingCostAndGradient05),
+        dummy_vectors)
+    print("nSCAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG5555555555555555 took %f seconds" % (time.time() - startTime))
+    startTime = time.time()
+    gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
+        skipgram, dummy_tokens, vec, dataset, 5, negSamplingCostAndGradient06),
+        dummy_vectors)
+    print("nSCAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG6666666666666666 took %f seconds" % (time.time() - startTime))
+    startTime = time.time()
+    gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
+        skipgram, dummy_tokens, vec, dataset, 5, negSamplingCostAndGradient07),
+        dummy_vectors)
+    print("nSCAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG7777777777777777 took %f seconds" % (time.time() - startTime))
+    startTime = time.time()
+    gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
+        skipgram, dummy_tokens, vec, dataset, 5, negSamplingCostAndGradient08),
+        dummy_vectors)
+    print("nSCAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG8888888888888888 took %f seconds" % (time.time() - startTime))
+    startTime = time.time()
+    gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
+        skipgram, dummy_tokens, vec, dataset, 5, negSamplingCostAndGradientNonVectorized),
+        dummy_vectors)
+    print("nSCAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGNVNVNVNVNVNVNVNV took %f seconds" % (time.time() - startTime))
+    print("\n==== Gradient check for CBOW      ====")
+    gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
+        cbow, dummy_tokens, vec, dataset, 5, softmaxCostAndGradient),
+        dummy_vectors)
+    gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
+        cbow, dummy_tokens, vec, dataset, 5, negSamplingCostAndGradient01),
+        dummy_vectors)
 
     print("\n=== Results ===")
     print(skipgram("c", 3, ["a", "b", "e", "d", "b", "c"],
         dummy_tokens, dummy_vectors[:5,:], dummy_vectors[5:,:], dataset))
     print(skipgram("c", 1, ["a", "b"],
         dummy_tokens, dummy_vectors[:5,:], dummy_vectors[5:,:], dataset,
-        negSamplingCostAndGradient))
-#    print(cbow("a", 2, ["a", "b", "c", "a"],
-#        dummy_tokens, dummy_vectors[:5,:], dummy_vectors[5:,:], dataset))
-#    print(cbow("a", 2, ["a", "b", "a", "c"],
-#        dummy_tokens, dummy_vectors[:5,:], dummy_vectors[5:,:], dataset,
-#        negSamplingCostAndGradient))
+        negSamplingCostAndGradient01))
+    print(cbow("a", 2, ["a", "b", "c", "a"],
+        dummy_tokens, dummy_vectors[:5,:], dummy_vectors[5:,:], dataset))
+    print(cbow("a", 2, ["a", "b", "a", "c"],
+        dummy_tokens, dummy_vectors[:5,:], dummy_vectors[5:,:], dataset,
+        negSamplingCostAndGradient01))
 
 
 if __name__ == "__main__":
