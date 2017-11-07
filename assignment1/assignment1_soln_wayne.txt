@@ -236,7 +236,13 @@ J = -∑w [yw * log(ŷw)] # definition
 
 ∂J/∂U = [ ∂J/∂u1  ∂J/∂u2  ∂J/∂u3  ∂J/∂u4 ]
  = [ ŷ1*vc  ŷ2*vc  (ŷ3 - 1)*vc  ŷ4*vc]
+
+     ŷ1*vc1  ŷ2*vc1  (ŷ3 - 1)*vc1  ŷ4*vc1
+ = [ ŷ1*vc2  ŷ2*vc2  (ŷ3 - 1)*vc2  ŷ4*vc2 ]
+     ŷ1*vc3  ŷ2*vc3  (ŷ3 - 1)*vc3  ŷ4*vc3
+
  = vc.dot((ŷ - y).T)
+ = vc ⊗ (ŷ - y)
 
 
 (3c)
