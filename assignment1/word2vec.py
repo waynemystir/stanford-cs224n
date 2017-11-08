@@ -35,7 +35,9 @@ def softmaxCAG(pred, target, outputVectors, dataset, K=10,verbose=False):
     cost = -np.log(yy[target])
     yy[target] -= 1 # ŷ - y
     gradPred = outputVectors.T.dot(yy)
-    grad = np.outer(yy,pred)
+    # np.outer is slow for smaller vectors like that
+#    grad = np.outer(yy,pred)
+    grad = yy.reshape(outputVectors.shape[0],1).dot(pred.reshape(1,outputVectors.shape[1]))
     return cost, gradPred, grad
 
 def getSampleIndices(target,dataset,K):
@@ -58,11 +60,13 @@ def negSamplingCAG(pred, target, outputVectors, dataset, K=10,verbose=False):
     ids.extend(getSampleIndices(target,dataset,K))
     D,directions,grad,outputWords = outputVectors.shape[1],np.array([[1] + [-1 for _ in range(K)]]),np.zeros_like(outputVectors),outputVectors[ids,:]
     if verbose: print("negSampling oW({}) pred({}) dir({}) oW.pred({})".format(outputWords.shape,pred.shape,directions.shape,outputWords.dot(pred).shape))
-    delta = sigmoid(outputWords.dot(pred) * directions)
-    delta_minus = (delta-1) * directions
-    cost = -np.sum(np.log(delta))
-    gradPred = delta_minus.reshape(1,K+1).dot(outputWords).flatten()
-    gTmp = delta_minus.reshape(K+1,1).dot(pred.reshape(1,D))
+    δ1 = sigmoid(outputWords.dot(pred) * directions)
+    δ2 = (δ1-1) * directions
+    cost = -np.sum(np.log(δ1))
+    gradPred = δ2.reshape(1,K+1).dot(outputWords).flatten()
+    gTmp = δ2.reshape(K+1,1).dot(pred.reshape(1,D))
+    # np.outer is faster for very large vectors, but much slower for small vectors like these
+#    gTmp = np.outer(δ2,pred)
     for k in range(K+1):
         grad[ids[k]] += gTmp[k,:]
     return cost,gradPred,grad

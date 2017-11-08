@@ -368,6 +368,41 @@ def negSamplingCostAndGradient08(predicted, target, outputVectors, dataset,
     return cost, gradPred, grad
 
 
+def negSamplingCostAndGradient09(predicted, target, outputVectors, dataset,
+                               K=10):
+    """ Negative sampling cost function for word2vec models
+
+    Implement the cost and gradients for one predicted word vector
+    and one target word vector as a building block for word2vec
+    models, using the negative sampling technique. K is the sample
+    size.
+
+    Note: See test_word2vec below for dataset's initialization.
+
+    Arguments/Return Specifications: same as softmaxCostAndGradient
+    """
+
+    # Sampling of indices is done for you. Do not modify this if you
+    # wish to match the autograder and receive points!
+    indices = [target]
+    indices.extend(getNegativeSamples(target, dataset, K))
+
+    ### YOUR CODE HERE
+    directions,grad,D = np.array([1] + [-1 for k in range(K)]), np.zeros_like(outputVectors), outputVectors.shape[1]
+    outputWords = outputVectors[indices,:]
+    δ1 = sigmoid(np.dot(outputWords,predicted) * directions)
+    δ2 = (δ1 - 1) * directions;
+    cost = -np.sum(np.log(δ1));
+    gradPred = np.dot(δ2.reshape(1,K+1),outputWords).flatten()
+    gradMin = np.outer(δ2,predicted)
+
+    for k in range(K+1):
+        grad[indices[k]] += gradMin[k,:]
+    ### END YOUR CODE
+
+    return cost, gradPred, grad
+
+
 def negSamplingCostAndGradientNonVectorized(predicted, target, outputVectors, dataset,
                                K=10):
     """ Negative sampling cost function for word2vec models
@@ -570,6 +605,11 @@ def test_word2vec():
         skipgram, dummy_tokens, vec, dataset, 5, negSamplingCostAndGradient08),
         dummy_vectors)
     print("nSCAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG8888888888888888 took %f seconds" % (time.time() - startTime))
+    startTime = time.time()
+    gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
+        skipgram, dummy_tokens, vec, dataset, 5, negSamplingCostAndGradient09),
+        dummy_vectors)
+    print("nSCAGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG9999999999999999 took %f seconds" % (time.time() - startTime))
     startTime = time.time()
     gradcheck_naive(lambda vec: word2vec_sgd_wrapper(
         skipgram, dummy_tokens, vec, dataset, 5, negSamplingCostAndGradientNonVectorized),

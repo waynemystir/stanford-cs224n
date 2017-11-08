@@ -251,11 +251,32 @@ Negative Sampling Loss = J(o, vc, U) = -log(σ(uo.T.dot(vc))) - ∑k[log(σ(-uk.
 
 ∂(Left Side)/∂vc = -1/(σ(uo.T.dot(vc))) * σ'(uo.T.dot(vc)) * uo
  = -[σ(1-σ)/σ] * uo = (σ(uo.T.dot(vc)) - 1)uo
-∂(Right Size)/∂vc = -∑k[(σ(-uk.T.dot(vc)) - 1)uk]
+∂(Right Side)/∂vc = -∑k[(σ(-uk.T.dot(vc)) - 1)uk]
 ∂J/∂vc = (σ(uo.T.dot(vc)) - 1)uo - ∑k[(σ(-uk.T.dot(vc)) - 1)uk]
 
-∂J/∂uo = -1/σ * σ' * vc = (σ(uo.T.dot(vc))-1)vc
-∂J/∂uk = -(1/σ * σ' * -vc) = -(σ(-uk.T.dot(vc)) - 1)vc for all k=1,2,...,K
+Let dirs = [+1,-1,-1,-1,...,-1,-1,-1] be a vector of size K+1 where dirs-0 = +1 and dirs-j = -1 for j=1,2,...,,K
+And let δj = σ(uj.T.dot(vc) * dirs[j]) for j = 0 and for all j = k = 1,2,3,...,K
+Where u0 = uo
+Then J = -∑j[log(δj)]
+
+Now let δ2 = (δ - 1) * dirs
+Then ∂J/∂vc = ∑j[δ2j * uj] = U.dot(δ2) # DxK+1 dot K+1x1 = Dx1
+Where U is the matrix of column vectors uo, u1, u2, ...., uK (AKA the output words)
+
+∂J/∂uo = -1/σ * σ' * vc = (σ(uo.T.dot(vc))-1)vc = δ2,o * vc
+∂J/∂uk = -(1/σ * σ' * -vc) = -(σ(-uk.T.dot(vc)) - 1)vc = δ2,k * vc for all k=1,2,...,K
+∂J/∂U = [ ∂J/∂uo  ∂J/∂u1  ∂J/∂u2  ∂J/∂u3  ∂J/∂u4  ... ] = [ δ2,o*vc  δ2,1*vc  δ2,2*vc  ... ]
+ = vc.dot(δ2.T)
+
+If U is a matrix of row vectors of output words uo, u1, ... uK and vc is also a row vector, then
+
+          ∂J/∂uo       δ2,o * vc
+          ∂J/∂u1       δ2,1 * vc
+∂J/∂U = [ ∂J/∂u2 ] = [ δ2,2 * vc ] = δ2.dot(vc)
+          ∂J/∂u3       δ2,3 * vc
+          ∂J/∂u4       δ2,4 * vc
+
+
 
 Why is Negative Sampling so much more efficient?
 Softmax-CE Loss vs Negative Sampling Loss runtime is O(|V|) vs O(K).

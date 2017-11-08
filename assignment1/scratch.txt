@@ -1,3 +1,57 @@
 idx = np.random.choice(10, 2, replace=False)
 idx
 B[idx,:]
+
+
+∂J/∂vc = ∑j[δ2j * uj] = P.dot(δ2) # DxK+1 dot K+1x1 = Dx1
+Where P is the matrix of column vectors uo, u1, u2, ...., uK (AKA the output words)
+
+
+       u00 u01 u02 u03
+P = [  u10 u11 u12 u13  ]
+       u20 u21 u22 u23
+
+
+      δ0
+      δ1
+δ = [ δ2 ]
+      δ3
+
+
+             ∑j δj*u0j
+P.dot(δ) = [ ∑j δj*u1j ]
+             ∑j δj*u2j
+
+
+           u0j
+ = ∑j δj [ u1j ]
+           u2j
+
+
+ = ∑j δj uj
+
+
+               δ1
+               δ2
+δ.dot(v.T) = [ δ3 ] dot [ v1 v2 v3 v4 v5 v6 ]
+               δ4
+
+     δ1v1  δ1v2  δ1v3  δ1v4  δ1v5  δ1v6
+     δ2v1  δ2v2  δ2v3  δ2v4  δ2v5  δ2v6
+ = [ δ3v1  δ3v2  δ3v3  δ3v4  δ3v5  δ3v6 ]
+     δ4v1  δ4v2  δ4v3  δ4v4  δ4v5  δ4v6
+
+
+               v1
+               v2
+               v3
+v.dot(δ.T) = [ v4 ] dot [ δ1 δ2 δ3 δ4 ]
+               v5
+               v6
+
+      v1δ1  v1δ2  v1δ3  v1δ4
+      v2δ1  v2δ2  v2δ3  v2δ4
+      v3δ1  v3δ2  v3δ3  v3δ4
+ = [  v4δ1  v4δ2  v4δ3  v4δ4  ]
+      v5δ1  v5δ2  v5δ3  v5δ4
+      v6δ1  v6δ2  v6δ3  v6δ4
