@@ -2,9 +2,6 @@ import numpy as np
 import random
 import time
 from utils.treebank import StanfordSentiment
-import matplotlib
-matplotlib.use('agg')
-import matplotlib.pyplot as plt
 
 def gradcheck_naive(f,x):
     rndst = random.getstate()
@@ -50,20 +47,23 @@ def sigmoid_grad(f):
 def getSampleIdxs(target,dataset,K):
     indices = [None] * K
     for k in range(K):
-        newidx = dataset.sampleTokenIdx()
+        newidx = dataset.getSampleIdx()
         while newidx == target:
-            newidx = dataset.sampleTokenIdx()
+            newidx = dataset.getSampleIdx()
         indices[k] = newidx
     return indices
 
 def negSamplingCAG(pred, target, outputVectors, dataset, K=10, verbose=False):
-    ids = [target] + [i for i in getSampleIdxs(target,dataset,K)]
-    grad,outputWords,dirs = np.zeros_like(outputVectors),outputVectors[ids,:],np.array([[1] + [-1 for _ in range(K)]])
-    δ1 = sigmoid(outputWords.dot(pred) * dirs)
-    cost,δ2 = -np.sum(np.log(δ1)),(δ1-1) * dirs
+    ids = [target]
+    ids.extend(getSampleIdxs(target,dataset,K))
+    D,grad,outputWords = outputVectors.shape[1],np.zeros_like(outputVectors),outputVectors[ids,:]
+    directions = np.array([[1] + [-1 for _ in range(K)]])
+    if verbose: print("negSamplingCAG opW {} pred {} dirs {}".format(outputWords.shape,pred.shape,directions.shape))
+    δ1 = sigmoid(outputWords.dot(pred) * directions)
+    δ2 = (δ1-1) * directions
+    cost = -np.sum(np.log(δ1))
     gradPred = δ2.reshape(1,K+1).dot(outputWords).flatten()
-#    gradPred = outputWords.T.dot(δ2.reshape(K+1,1)).flatten()
-    gTmp = δ2.reshape(K+1,1).dot(pred.reshape(1,outputVectors.shape[1]))
+    gTmp = δ2.reshape(K+1,1).dot(pred.reshape(1,D))
     for k in range(K+1):
         grad[ids[k]] += gTmp[k,:]
     return cost, gradPred, grad
@@ -78,7 +78,8 @@ def skipgram(currentWord, contextWords, tokens, inputVectors, outputVectors, dat
     return cost, gradIn, gradOut
 
 def cbow(currentWord, contextWords, tokens, inputVectors, outputVectors, dataset, w2vCAG=negSamplingCAG, verbose=False):
-    vhat_indices,gradIn = [tokens[cw] for cw in contextWords],np.zeros_like(inputVectors)
+    cost,gradIn = 0,np.zeros_like(inputVectors)
+    vhat_indices = [tokens[cw] for cw in contextWords]
     vhat_vectors = inputVectors[vhat_indices,:]
     vhat = np.sum(vhat_vectors,axis=0)
     cost,gin,gradOut = w2vCAG(vhat, tokens[currentWord], outputVectors, dataset, verbose=verbose)
@@ -99,49 +100,6 @@ def sgd_wrapper(tokens, vectors, dataset, contextSize, w2vmodel=skipgram, w2vCAG
         grad[N:,:] += got/batchsize
     return cost,grad
 
-def sgd(f,x0,itrs,learning_rate,print_every=1000):
-    x = x0.copy()
-    expcost,cost = None,0.
-    st = time.time()
-    for i in range(itrs):
-        cost,grad  = f(x)
-        x -= learning_rate * grad
-        expcost = cost if expcost is None else 0.9 * expcost + 0.1 * cost
-        if i % print_every == 0:
-            print("SGD (%d) expcost (%f) cost (%f) in (%f) seconds" % (i,expcost,cost,time.time()-st))
-            st = time.time()
-    return x
-
-def run():
-    random.seed(319)
-    dataset = StanfordSentiment()
-    tokens_encoded = dataset.tokens()
-    for k,v in tokens_encoded.items():
-        if type(k) == str:
-            tokens_encoded.pop(k)
-            tokens_encoded[k.encode('latin1')] = v
-    tokens = dict((k.decode('latin1'),v) for k,v in tokens_encoded.items())
-    V,D = len(tokens),10
-    random.seed(31919)
-    np.random.seed(41717)
-    vectors = np.concatenate((np.random.randn(V,D),np.zeros((V,D))),axis=0)
-    start_time = time.time()
-    vectors = sgd(lambda vecs: sgd_wrapper(tokens_encoded,vecs,dataset,5,w2vmodel=skipgram), vectors, 24001, 3e-1)
-    print("w2v run in (%f) seconds" % (time.time()-start_time))
-    visualize_words=['smart','dumb','tall','short','good','bad','king','queen','man','woman']
-    visualize_indices = [tokens[w] for w in visualize_words]
-    visualize_vecs = vectors[visualize_indices, :]
-    temp = (visualize_vecs - np.mean(visualize_vecs, axis=0))
-    covariance = 1.0 / len(visualize_indices) * temp.T.dot(temp)
-    U,S,V = np.linalg.svd(covariance)
-    coord = temp.dot(U[:,0:2])
-    for i in range(len(visualize_words)):
-        plt.text(coord[i,0], coord[i,1], visualize_words[i],
-            bbox=dict(facecolor='green', alpha=0.1))
-    plt.xlim((np.min(coord[:,0]), np.max(coord[:,0])))
-    plt.ylim((np.min(coord[:,1]), np.max(coord[:,1])))
-    plt.savefig('q3_word_vectors.png')
-
 def test_w2v():
     random.seed(319)
     np.random.seed(419)
@@ -151,7 +109,7 @@ def test_w2v():
     def dummyRandomContext(C):
         tokens = ['a','b','c']
         return tokens[random.randint(0,2)], [tokens[random.randint(0,2)] for _ in range(2*C)]
-    dataset.sampleTokenIdx = dummySampleIdx
+    dataset.getSampleIdx = dummySampleIdx
     dataset.getRandomContext = dummyRandomContext
     tokens = {'a':0,'b':1,'c':2}
     vectors = np.random.randn(6,2)
@@ -163,5 +121,10 @@ def test_w2v():
     gradcheck_naive(lambda vecs: sgd_wrapper(tokens, vecs, dataset, 17, w2vmodel=skipgram, w2vCAG=softmaxCAG, verbose=False), vectors)
 
 if __name__=="__main__":
-#    test_w2v()
-    run()
+    test_w2v()
+
+
+
+
+
+

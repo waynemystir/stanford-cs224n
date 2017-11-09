@@ -2,9 +2,6 @@ import numpy as np
 import random
 import time
 from utils.treebank import StanfordSentiment
-import matplotlib
-matplotlib.use('agg')
-import matplotlib.pyplot as plt
 
 def gradcheck_naive(f,x):
     rndst = random.getstate()
@@ -106,7 +103,8 @@ def sgd(f,x0,itrs,learning_rate,print_every=1000):
     for i in range(itrs):
         cost,grad  = f(x)
         x -= learning_rate * grad
-        expcost = cost if expcost is None else 0.9 * expcost + 0.1 * cost
+        if expcost is None: expcost = cost
+        else: expcost = 0.9 * expcost + 0.1 * cost
         if i % print_every == 0:
             print("SGD (%d) expcost (%f) cost (%f) in (%f) seconds" % (i,expcost,cost,time.time()-st))
             st = time.time()
@@ -126,21 +124,8 @@ def run():
     np.random.seed(41717)
     vectors = np.concatenate((np.random.randn(V,D),np.zeros((V,D))),axis=0)
     start_time = time.time()
-    vectors = sgd(lambda vecs: sgd_wrapper(tokens_encoded,vecs,dataset,5,w2vmodel=skipgram), vectors, 24001, 3e-1)
+    vectors = sgd(lambda vecs: sgd_wrapper(tokens_encoded,vecs,dataset,5,w2vmodel=skipgram), vectors, 14001, 3e-1)
     print("w2v run in (%f) seconds" % (time.time()-start_time))
-    visualize_words=['smart','dumb','tall','short','good','bad','king','queen','man','woman']
-    visualize_indices = [tokens[w] for w in visualize_words]
-    visualize_vecs = vectors[visualize_indices, :]
-    temp = (visualize_vecs - np.mean(visualize_vecs, axis=0))
-    covariance = 1.0 / len(visualize_indices) * temp.T.dot(temp)
-    U,S,V = np.linalg.svd(covariance)
-    coord = temp.dot(U[:,0:2])
-    for i in range(len(visualize_words)):
-        plt.text(coord[i,0], coord[i,1], visualize_words[i],
-            bbox=dict(facecolor='green', alpha=0.1))
-    plt.xlim((np.min(coord[:,0]), np.max(coord[:,0])))
-    plt.ylim((np.min(coord[:,1]), np.max(coord[:,1])))
-    plt.savefig('q3_word_vectors.png')
 
 def test_w2v():
     random.seed(319)
