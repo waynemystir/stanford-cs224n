@@ -112,7 +112,7 @@ J(o,vc,U) = -y * log(ŷ) = -log(ŷo)
 
       uo1 uo2 uo3 ... uoD       uo.T
 ψ = [ u11 u12 u13 ... u1D ] = [ u1.T ]
-      ...................       ...
+      ...................       ....
       uK1 uK2 uK3 ... uKD       uK.T
 
 α = [+1] + [-1]*K is a K+1x1 column vector
@@ -127,6 +127,13 @@ J(o,vc,U) = -log(σ(uo.dot(vc))) - ∑k [log(σ(-uk.dot(vc)))] = -∑k [log(δk)
      uoD u1D u2D ... uKD         φK
 
  = ψ.T.dot(φ) # DxK+1 dot K+1x1 = Dx1
+
+For NumPy purposes, it may be desirable for ∂J/∂vc to be flat:
+
+Let ε = ψ.T.dot(φ.reshape(K+1,1)). Then εi = ∑k [ φk * uki ], ε is DxK+1 dot K+1x1 = Dx1, and ε.flatten() = [ ε0 ε1 ... εK ] is flat.
+Let β = φ.reshape(1, K+1).dot(ψ) . Then βi = ∑k [ φk * uki ], β is 1xK+1 dot K+1xD = 1xD, and β.flatten() = [ β0 β1 ... βK ] is flat.
+And βi = ∑k [ φk * uki ] = εi, β.flatten() = ε.flatten().
+From minimal comparison, it seems the calculations for β and ε have similar runtimes. But this is worth further comparison.
 
 ∂J/∂ui = -[ 1/δi * δi * (1-δi) * αi * vc ] = φi * vc
 
