@@ -5,64 +5,53 @@ g(x) = 1+x
 h(x) = exp(x)
 i(x) = -x
 
-σ'(x) = f'(g(h(i(x)))) * g' * h'(i(x)) * i'
- = -1/[1+exp(-x)]^2 * 1 * exp(-x) * -1
- = exp(-x) / (1+exp(-x)) * 1 / (1+exp(-x))
- = [ 1 + exp(-x) - 1 ] / (1+exp(-x)) * σ(x)
- = [ 1 - 1/(1+exp(-x)) ] * σ(x)
- = (1 - σ(x)) * σ(x)
+σ'(x) = f'(g(h(i(x)))) * 1 * h'(i(x)) * -1
+ = -1/(1+exp(-x))^2 * exp(-x) * -1
+ = 1/(1+exp(-x)) * [( 1 + exp(-x) - 1 )/(1+exp(-x))]
+ = σ(x) * [ 1 - 1/(1+exp(-x)) ]
+ = σ(x) * (1 - σ(x))
 
-
-σ(-x) = 1/(1+exp(x)) = exp(-x) / [ exp(-x) * (1+exp(x)) ]
- = [ 1 + exp(-x) - 1] / (exp(-x) + 1)
- = 1 - 1/(1+exp(-x))
+σ(-x) = 1/(1 + exp(x)) = exp(-x) / [ exp(-x) + exp(-x)*exp(x) ]
+ = [ 1 + exp(-x) - 1 ] / (1 + exp(-x))
  = 1 - σ(x)
-
 
 (2b)
 
-θ is a column vector (Wx1)
-ŷi := exp(θi) / φ
-φ := Denominator Sum = ∑w exp(θw)
-ŷ := softmax(θ) is a column vector (Wx1)
-y is a onehot column vector (Wx1) where yk = 1 for some k
-J(θ) := -∑w [yw * log(ŷw)] = -y * log(ŷ)
- = -log(ŷk)
+θ is a column vector Cx1
+φ = ∑c exp(Θc)
+ŷi = exp(θi) / φ
+ŷ = softmax(θ) is a column vector Cx1
+y is a onehot column vector Cx1 where yk = 1
 
-∂J/∂θi = -1/ŷk * [ ∂exp(θk)/∂θi * φ - exp(θk)*exp(θi) ] / φ^2
- = 1/ŷk * exp(θk)/φ * exp(θi)/φ
- = ŷi
+J(θ) = -y * log(ŷ) = -log(ŷk)
 
-∂J/∂θk = -1/ŷk * [ exp(θk) * φ - exp(θk)^2 ] / φ^2
- = [ exp(θk) - φ ] / φ
- = ŷk - 1
+∂J/∂θi = -1/ŷk * [ 0*φ - exp(θk)*exp(θi) ] / φ^2 = ŷi
+∂J/∂θk = -1/ŷk * [ exp(θk)*φ - exp(θk)^2 ] / φ^2 = [ exp(θk) - φ ] / φ = ŷk - 1
 
-          ŷ1 - 0
-          ŷ2 - 0
-          ......
-∂J/∂θ = [ ŷk - 1 ] = ŷ - y
-          ......
-          ŷW - 0
+          ŷ1
+          ....
+∂J/∂θ = [ ŷk-1 ] = ŷ - y
+          ....
+          ŷC
 
 
 (2c)
 
-D is the number of input neurons
 N is the number of training examples
+D is the number of input neurons
 H is the number of hidden neurons
 C is the number of classes
-x (1xD) is a row vector
-X (NxD) is all the x's stacked
+x is a row vector 1xD
+X NxD
 W1 (DxH) B1 (H) W2 (HxC) B2 (C)
 z1 = X.dot(W1) + B1 # NxD dot DxH = NxH
 h = σ(z1) # NxH
-z2 = h.dot(W2) + B2 # NxH dot HxC = NxC
-ŷ = softmax(z2) # NxC, this is the softmax of each row... i.e. of each training example
-y (NxC), N stacked onehot vectors
-J = -∑n log(ŷn,k) / N = -∑n [ yn * log(ŷn) ] / N
+z2 = h.dot(W2) # NxH dot HxC = NxC
+ŷ = softmax(z2) # NxC
+J(θ) = -∑n (yn * log(ŷn)) / N = -∑n log(ŷn,k) / N
 
 δ3 = ∂J/∂z2 = (ŷ - y) / N # NxC
-∂J/∂W2 = δ3 * ∂z2/∂W2 = h.T.dot(δ3) # HxN dot NxC = HxC
+∂J/∂W2 = ∂z2/∂W2 * δ3 = h.T.dot(δ3) # HxN dot NxC = HxC
 ∂J/∂B2 = sum(δ3, axis=0) # C
 δ2 = ∂J/∂h = δ3 * ∂z2/∂h = δ3.dot(W2.T) # NxC dot CxH = NxH
 δ1 = ∂J/∂z1 = δ2 * ∂h/∂z1 = δ2 * σ'(z1) = δ2 * h * (1-h) # NxH
@@ -73,121 +62,79 @@ J = -∑n log(ŷn,k) / N = -∑n [ yn * log(ŷn) ] / N
 
 (2d)
 
-DxH + H + HxC + C = H(D+1) + C(H+1)
+DxH + H + HxC + C = (D+1)H + (H+1)C
 
 
 (3a)
 
 W is the number of words
 D is the number of embeddings
-ui are column vectors (Dx1)
-vc is the predicted column vector (Dx1) from V (WxD) the input vectors
+ui and vc are column vectors Dx1, output and input respectively
 ηi = exp(ui.T.dot(vc))
 φ = ∑w ηw
 ŷi = ηi / φ
-ŷ is a column vector (Wx1)
-y is onehot column vector where yo = 1 for some o
+ŷ is a column vector Wx1
+y is the onehot expected column vector, yo = 1
 
-      u1.T       u11 u12 u13 ... u1D
-      u2.T       u21 u22 u23 ... u2D
-U = [ u3.T ] = [ u31 u32 u33 ... u3D ]
-      ....       ...................
-      uW.T       uW1 uW2 uW3 ... uWD
+      u1.T       u11 u12 ... u1D
+U = [ u2.T ] = [ u21 u22 ... u2D ]
+      ....       ...............
+      uW.T       uW1 uW2 ... uWD
 
-J(o,vc,U) = -∑w [ yw * log(ŷw) ] = -log(ŷo)
+J(o,vc,U) = -y * log(ŷ) = -log(ŷo)
 
-∂J/∂vc = -1/ŷo * [ ηo * uo * φ - ηo * ∑w ( ηw * uw )  ] / φ^2
- = 1/ŷo * ηo/φ * [ ∑w ( ηw * uw ) - uo * φ ] / φ
- = ∑w [ ηw/φ * uw ] - uo
+∂J/∂vc = -1/ŷo * [ ηo * uo * φ - ηo * ∑w [ ηw * uw ]  ] / φ^2
+ = [ ∑w [ ηw * uw ] - uo * φ  ] / φ = ∑w [ ηw/φ * uw ] - uo
  = ∑w ( ŷw * uw ) - uo
-
-     u11 u21 u31 ... uW1         ŷ1 - 0
-     u12 u22 u32 ... uW2         ......
- = [ u13 u23 u33 ... uW3 ] dot [ ŷo - 1 ]
-     ...................         ......
-     u1D u2D u3D ... uWD         ŷW - 0
+                                     ŷ1
+     u11 u21 ... uo1 ... uW1         ....
+ = [ u12 u22 ... uo2 ... uW2 ] dot [ ŷo-1 ]
+     .......................         ....
+     u1D u2D ... uoD ... uWD         ŷW
 
  = U.T.dot(ŷ - y) # DxW dot Wx1 = Dx1
 
 
 (3b)
 
-∂J/∂ui = -1/ŷo * [ 0 * φ - ηo * ηi * vc ] / φ^2
- = ηi * vc / φ
- = ŷi * vc
+∂J/∂ui = -1/ŷo * [ 0*φ - ηo * ηi * vc ] / φ^2 = ηi * vc / φ = ŷi * vc
+∂J/∂uo = -1/ŷo * [ ηo * vc * φ - ηo * ηo * vc ] / φ^2 = vc * [ ηo - φ ] / φ = vc * ( ŷ0 - 1 )
 
-∂J/∂uo = -1/ŷo * [ ηo * vc * φ - ηo * ηo * vc ] / φ^2
- = [ ηo * vc - vc * φ ] / φ
- = vc (ŷo - 1)
+          ∂J/∂u1.T        ŷ1 * vc.T
+          ........        ............ 
+∂J/∂U = [ ∂J/∂uo.T ] = [ (ŷo-1) * vc.T ]
+          ........        ............
+          ∂J/∂uW.T        ŷW * vc.T
 
-          vc.T * ŷ1
-          vc.T * ŷ2
-          ............
-∂J/∂U = [ vc.T * (ŷo-1) ] = (ŷ - y).dot(vc.T) # Wx1 dot 1xD = WxD
-          ............
-          vc.T * ŷW
-
+ = (ŷ - y).dot(vc.T) # Wx1 dot 1xD = WxD
 
 (3c)
 
-W is the number of words
-D is the number of embeddings
-K is the number of samples
-ui are column vectors (Dx1)
-vc is the predicted column vector (Dx1) from V (WxD) the input vectors
-α = [+1] + [-1]*K
-δi = σ( ui.T.dot(vc) * αi ) for i=0,1,...,K where u0=uo
+      uo1 uo2 uo3 ... uoD       uo.T
+ψ = [ u11 u12 u13 ... u1D ] = [ u1.T ]
+      ...................       ...
+      uK1 uK2 uK3 ... uKD       uK.T
+
+α = [+1] + [-1]*K is a K+1x1 column vector
+δ = σ( ψ.dot(vc) * α )
 φ = (δ - 1) * α
-y is onehot column vector where yo = 1 for some o
+J(o,vc,U) = -log(σ(uo.dot(vc))) - ∑k [log(σ(-uk.dot(vc)))] = -∑k [log(δk)]
+∂J/∂vc = -∑k [ 1/δk * δk * (1 - δk) * αk * uk ] = ∑k [ φk * uk ]
 
-      u1.T       u11 u12 u13 ... u1D
-      u2.T       u21 u22 u23 ... u2D
-U = [ u3.T ] = [ u31 u32 u33 ... u3D ]
-      ....       ...................
-      uW.T       uW1 uW2 uW3 ... uWD
-
-      uo.T       uo1 uo2 uo3 ... uoD
-      u1.T       u11 u12 u13 ... u1D
-      u2.T       u21 u22 u23 ... u2D
-ψ = [ u3.T ] = [ u31 u32 u33 ... u3D ]
-      ....       ...................
-      uK.T       uK1 uK2 uK3 ... uKD
-
-J(o,vc,U) = -log(σ(uo.T.dot(vc))) - ∑k [log(σ(-uk.T.dot(vc)))]
- = -∑k [ log(δk) ]
-
-∂J/∂vc = -∑k [ 1/δk * δk * (1-δk) * αk * uk ]
- = ∑k [ φk * uk ]
-
-     uo1 u11 u21 ... uK1
-     uo2 u12 u22 ... uK2         α0
-     uo3 u13 u23 ... uK3         α1
- = [ uo4 u14 u24 ... uK4 ] dot [ α2  ]
+     uo1 u11 u21 ... uK1         φ0
+ = [ uo2 u12 u22 ... uK2 ] dot [ φ1 ]
      ...................         ..
-     uoD u1D u2D ... uKD         αK
+     uoD u1D u2D ... uKD         φK
 
  = ψ.T.dot(φ) # DxK+1 dot K+1x1 = Dx1
 
-∂J/∂uo = -1/δo * δo * (1-δo) * αo * vc
- = φo * vc
+∂J/∂ui = -[ 1/δi * δi * (1-δi) * αi * vc ] = φi * vc
 
-∂J/∂ui = -1/δi * δi * (1-δi) * αi * vc
- = φi * vc
-
-          ∂J/∂uo.T       φo * vc.T
-          ∂J/∂u1.T       φ1 * vc.T
-∂J/∂ψ = [ ∂J/∂u2.T ] = [ φ2 * vc.T ]
+          ∂J/∂uo.T       φ0 * vc.T
+∂J/∂ψ = [ ∂J/∂u1.T ] = [ φ1 * vc.T ]
           ........       .........
           ∂J/∂uK.T       φK * vc.T
 
- = φ.dot(vc.T)  # K+1x1 dot 1xD = K+1xD
+ = φ.dot(vc.T) # K+1x1 dot 1xD = K+1xD
 
-Softmax-CE vs Negative Sampling runtime is O(W) / O(K).
-
-
-
-
-
-
-
-
+Softmax-CE vs Negative Sampling loss complexity is O(W) / O(K)
