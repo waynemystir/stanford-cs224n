@@ -1,0 +1,112 @@
+(2a)
+
+f(x) = 1/x
+g(x) = 1 + x
+h(x) = exp(x)
+i(x) = -x
+
+σ'(x) = f'(g(h(i(x)))) * 1 * h'(i(x)) * -1 = 1/(1+exp(-x))^2 * exp(-x)
+ = σ(x) * [ 1 + exp(-x) - 1 ] / (1+exp(-x))
+ = σ(x) * (1 - σ(x))
+
+σ(-x) = 1/(1+exp(x)) = exp(-x) / [ exp(-x) + exp(-x)exp(x) ] = [ 1 + exp(-x) - 1 ] / (1 + exp(-x))
+ = 1 - σ(x)
+
+
+(2b)
+
+θ is a column vector Cx1
+ηi = exp(Θi)
+φ = ∑cηc
+ŷi = ηi/φ
+ŷ is a column vector Cx1
+y is the expected onehot column vector Cx1 where yk = 1 for some k
+J(θ) = -y * log(ŷ) = -log(ŷk)
+∂J/∂θi = -1/ŷk * [ 0*φ - ηk * ηi ] / φ^2 = ŷi
+∂J/∂θk = -1/ŷk * [ ηk * φ - ηk^2 ] / φ^2 = [ ηk - φ ] / φ = ŷk - 1
+
+          ŷ1
+          ......
+∂J/∂θ = [ ŷk - 1 ] = ŷ - y
+          ......
+          ŷC
+
+
+(2c)
+
+N is the number of training examples
+D is the number of input neurons
+H is the number of hidden neurons
+C is the number of output neurons
+x is a row vector 1xD, a training example
+X is all training examples NxD
+W1 (DxH) B1 (H) W2 (HxC) B2 (C) θ = { W1,B1,W2,B2 }
+Z1 = X.dot(W1) + B1 # NxD dot DxH = NxH
+λ = σ(Z1) # NxH
+Z2 = λ.dot(W2) + B2 # NxH dot HxC = NxC
+ŷ = softmax(Z2) # NxC
+y is a vector of onehot row vectors NxC
+J(θ) = -∑n [ yn * log(ŷn) ] / N
+δ3 = ∂J/∂Z2 = (ŷ - y) / N # NxC
+∂J/∂W2 = ∂Z2/∂W2 * δ3 = λ.T.dot(δ3) # HxN dot NxC = HxC
+∂J/∂B2 = sum(δ3, axis=0) # C
+δ2 = ∂J/∂λ = δ3 * ∂Z2/∂λ = δ3.dot(W2.T) # NxC dot CxH = NxH
+δ1 = ∂J/∂Z1 = δ2 * ∂λ/∂Z1 = δ2 * σ'(Z1) = δ2 * λ * (1 - λ) # NxH
+∂J/∂X = δ1 * ∂Z1/∂X = δ1.dot(W1.T) # NxH dot HxD = NxD
+∂J/∂W1 = ∂Z1/∂W1 * δ1 = X.T.dot(δ1) # DxN dot NxH = DxH
+∂J/∂B1 = sum(δ1, axis=0) # H
+
+
+(2d)
+
+DxH + H + HxC + C = (D+1)H + (H+1)C
+
+
+(3a)
+
+W is the number of words
+D is the number of embeddings
+
+      u1.T       u11 u12 ... u1D
+U = [ u2.T ] = [ u21 u22 ... u2D  ] # WxD
+      ....       ...............
+      uW.T       uW1 uW2 ... uWD
+
+ψ = U.dot(vc) # WxD dot D = W
+ηi = exp(ψi)
+φ = ∑wηw
+ŷ = exp(ψ)/φ is a column vector Wx1
+y is a onehot column vector where yo = 1
+J(o, vc, U) = -y * log(ŷ) = -log(ŷo)
+∂J/∂vc = -1/ŷo * [ ηo * uo * φ - ηo * ∑w[ ηw * uw ] ] / φ^2 = [ ∑w[ ηw * uw ] - uo * φ ] / φ
+ = ∑w[ ŷw * uw ] - uo
+                              ŷ1
+     u11 u21 ... uW1         ......
+ = [ u12 u22 ... uW2 ] dot [ ŷo - 1 ]
+     ...............         ......
+     u1D u2D ... uWD          ŷW
+
+ = U.T.dot(ŷ - y) # DxW dot Wx1 = Dx1
+
+
+(3b)
+
+∂J/∂ui = -1/ŷo * [ 0*φ - ηo * ηi * vc ] / φ^2 = ηi * vc / φ = ŷi * vc
+∂J/∂uo = -1/ŷo * [ ηo * vc * φ - ηo * ηo * vc ] / φ^2 = [ ηo * vc - vc * φ ] / φ = (ŷo - 1) * vc
+
+          ∂J/∂u1.T       ŷ1*vc.T
+          ........       ...........
+∂J/∂U = [ ∂J/∂uo.T ] = [ (ŷo-1)*vc.T ]
+          ........       ...........
+          ∂J/∂uW.T       ŷW*vc.T
+
+ = (ŷ - y).dot(vc.T) # Wx1 dot 1xD = WxD
+
+
+
+
+
+
+
+
+

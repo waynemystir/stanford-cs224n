@@ -46,7 +46,7 @@ X NxD
 W1 (DxH) B1 (H) W2 (HxC) B2 (C)
 z1 = X.dot(W1) + B1 # NxD dot DxH = NxH
 h = σ(z1) # NxH
-z2 = h.dot(W2) # NxH dot HxC = NxC
+z2 = h.dot(W2) + B2 # NxH dot HxC = NxC
 ŷ = softmax(z2) # NxC
 J(θ) = -∑n (yn * log(ŷn)) / N = -∑n log(ŷn,k) / N
 

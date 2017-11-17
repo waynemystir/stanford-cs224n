@@ -1,0 +1,54 @@
+Sometimes I will suppose that C,D,x,W are arbitrary. But there will be times when it
+is helpful for concrete understanding to suppose that C,D,x,W are set as
+
+C = 2 is number of classes
+D = 3 is number of input neurons
+
+x = [1 2 3] 1x3 or 1xD
+
+      1 2
+W = [ 3 4 ] # DxC
+      5 6
+
+                             1 2
+z = x.dot(W) = [1 2 3] dot [ 3 4 ]
+                             5 6
+
+ = [ 22 28 ] # 1x3 dot 3x2 = 1x2
+
+z1 = 22 = 1*1 + 2*3 + 3*5 = ∑l( xl*Wl1 ) l=1,2,3
+z2 = 28 = 1*2 + 2*4 + 3*6 = ∑l( xl*Wl2 ) l=1,2,3
+zk = ∑l ( xl*Wlk ) l=1,2,3
+
+∂zk/∂Wij = ∑l ( xl*∂/∂Wij[Wlk] ) l=1,2,3
+∂/∂Wij[Wlk] = 1 IFF i=l and j=k, otherwise 0
+
+∂zk/∂Wij = xi IFF k=j, otherwise 0
+
+            0
+            .
+∂z/∂Wij = [ xi  ] <-- the jth element # Cx1
+            .
+            0
+
+yhat = softmax(z) = [ 0.00247262  0.99752738 ] # 1x2
+
+y = [ 0 1 ] 1x2
+
+δ = ŷ - y = [ 0.00247262  -0.00247262 ] # 1x2 = 1xC
+
+∂J/∂Wij = ∂J/∂z ∂z/∂Wij = δ ∙ ∂z/∂Wij # 1xC dot Cx1
+ = ∑k( δk*∂zk/∂Wij ) # as noted above all terms are zero except when k=j
+ = δj * xi
+
+          x1δ1 x1δ2 ... x1δC
+∂J/∂W = [ x2δ1 x2δ2 ... x2δC ]
+          ..................
+          xDδ1 xDδ2 ... xDδC
+
+     x1
+ = [ x2 ] ∙ [ δ1 δ2 .., δC ]
+     ..
+     xD
+
+ = x.T ∙ δ
