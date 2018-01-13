@@ -1,0 +1,13 @@
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+Try an integral
+
+$$
+\int_0^1f(x)dx
+$$
+
+And try a partial
+
+$$
+\frac{\partial f}{\partial x}
+$$
