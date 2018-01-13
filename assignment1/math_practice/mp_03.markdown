@@ -1,4 +1,71 @@
 <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+<script type="text/x-mathjax-config">
+        MathJax.Hub.Config({
+            config: ["MMLorHTML.js"],
+	    "HTML-CSS": {
+		scale: 100,
+		styles: {
+                    ".MathJax_Display": {
+		        "text-align": "",
+                        "font-size":  "75%"
+                    },
+                },
+            },
+	    displayAlign: "center",
+	    displayIndent: "-6em",
+            extensions: ["tex2jax.js","TeX/AMSmath.js","TeX/AMSsymbols.js"],
+            jax: ["input/TeX"],
+            tex2jax: {
+                inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                displayMath: [ ['$$','$$'], ["\\[","\\]"] ],
+                processEscapes: true,
+                skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+            },
+            TeX: {
+                TagSide: "right",
+                TagIndent: ".8em",
+                MultLineWidth: "85%",
+                equationNumbers: {
+                   autoNumber: "AMS",
+                },
+                unicode: {
+                   fonts: "STIXGeneral,'Arial Unicode MS'",
+                },
+		Macros: {
+		    norm: ["{\\lvert#1\\rvert}", 1],
+		    bigbar: "{\\Big|}",
+		    wR: "{\\mathbb{R}}",
+		    bop: "{\\Big(}",
+                    bcp: "{\\Big)}",
+                    bfp: "{\\mathbf{p}}",
+                    bfpone: "{\\mathbf{p_1}}",
+                    bfptwo: "{\\mathbf{p_2}}",
+                    bfu: "{\\mathbf{u}}",
+		    bfuone: "{\\mathbf{u_1}}",
+                    bfutwo: "{\\mathbf{u_2}}",
+                    bfv: "{\\mathbf{v}}",
+                    bfvone: "{\\mathbf{v_1}}",
+                    bfvtwo: "{\\mathbf{v_2}}",
+                    bfw: "{\\mathbf{w}}",
+                    bfx: "{\\mathbf{x}}",
+                    bfxone: "{\\mathbf{x_1}}",
+                    bfxtwo: "{\\mathbf{x_2}}",
+                    bfata: "{\\mathbf{A^TA}}",
+                    bfaat: "{\\mathbf{AA^T}}",
+                    ataaatprop: ["{\\bfata\\textbf{ and }\\bfaat\\textbf{ Properties (}#1\\textbf{)}}", 1],
+                    RR: "{\\bf R}",
+                    bold: ["{\\bf #1}",1],
+                }
+            },
+            showProcessingMessages: false
+        });
+	MathJax.Hub.Queue(function() {
+            var all = MathJax.Hub.getAllJax(), i;
+            for(i=0; i < all.length; i += 1) {
+                all[i].SourceElement().parentNode.className += ' has-jax';
+            }
+        });
+</script>
 
 Try an integral
 
